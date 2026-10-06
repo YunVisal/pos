@@ -79,3 +79,35 @@ Each block's warm-up questions, my answer, and the corrected answer.
 - **Leaks internals:** `id`, `createdBy`, `version`, later `business_id`, all sent to the browser.
 - **API is welded to the domain:** rename a field in `Unit` and the POS app and Owner Portal break, even though no one meant to change the API.
 - A `UnitResponse` DTO is the contract: the domain can change freely; the mapping in the api layer absorbs it.
+
+### Q9. (Day 2 evening warm-up) Explain the `Unit` feature in two sentences: what each layer does, which way dependencies point, and why `UnitRepository` lives in `domain`.
+
+**My answer:** api is the request/response point, application holds each use case, domain holds the data model and rules, infrastructure talks to storage. `UnitRepository` lives in domain because it contains business rules and application logic.
+
+**Corrected answer:** Layer roles correct. Missing: dependencies point **inward**: api → application → domain ← infrastructure. `UnitRepository` holds no logic. It is a **port**: the domain says "I need to save and find units" in its own terms, and infrastructure implements it. That is Dependency Inversion: the domain never imports infrastructure, so swapping `InMemoryUnitRepository` for JPA on Day 4 doesn't touch domain or application code.
+
+### Q10. (Day 2 evening break-it) `CurrencyController` calls `CurrencyRepository.findAll()` directly. It compiles, Spring starts, and all tests pass. Why does review still reject it?
+
+**My prediction (compile / tests / start):** all yes, "because `CurrencyRepository` has a bean that implements it".
+
+**Corrected prediction:** all yes, but for three separate reasons. Compile: the interface is `public`, and the compiler checks only visibility. Tests: the HTTP response is the same JSON. Start: exactly one `CurrencyRepository` bean. **Nothing in the toolchain stops a layering violation.**
+
+**My answer (why reject):** api should not access infrastructure directly; each controller needs its own use case.
+
+**Corrected answer:** The controller depends on the **domain port**, not on infrastructure (that's why it compiled). The violation is that **api skipped the application layer**. Why that matters:
+1. **Rules get bypassed silently.** Add "only currencies Sokha Mart has enabled" to `CurrencyService.findAll()`, and this path ignores it, with no test going red. Two roads to the same data drift apart.
+2. **Application concerns live in the service:** `@Transactional` (Day 4), tenant filtering by `business_id`, and permission checks. Skipping the service skips all of them; in a multi-tenant SaaS that's a data leak.
+
+Fix: reviews catch it only if someone notices, so an ArchUnit test makes the **build** reject it.
+
+### Q11. (Day 2 evening close) Our ArchUnit rule bans only `api` → `*Repository`. Name two other layering violations it would **not** catch.
+
+**My answer:** didn't know.
+
+**Corrected answer:** Any dependency that isn't `api` → `*Repository` slips through. For example:
+1. **application → api:** `CurrencyService.create(CreateCurrencyRequest)` or returning `CurrencyResponse`. The use case is now tied to HTTP DTOs.
+2. **domain → infrastructure / framework:** `Unit` importing `InMemoryUnitRepository`, or JPA/Spring annotations on the domain model.
+3. **api → infrastructure (not named `*Repository`):** e.g. a JPA entity or an HTTP client used directly in a controller.
+4. **feature → feature:** `currency.api` importing `unit.api.CreateUnitRequest` (the stray import from tonight's review).
+
+Fix: replace the single rule with ArchUnit's `layeredArchitecture()` (each layer declares who may access it) plus a feature-isolation rule. Day 5 candidate.
