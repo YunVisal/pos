@@ -1,10 +1,8 @@
 package com.sokhamart.template.unit.api;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,12 +31,6 @@ public class UnitController {
 
     @GetMapping
     List<UnitResponse> getAll() {
-        List<Unit> units = service.findAll();
-        List<UnitResponse> unitRes = new ArrayList<>();
-
-        for (Unit unit : units) {
-            unitRes.add(UnitResponse.from(unit));
-        }
-        return unitRes;
+        return service.findAll().stream().map(UnitResponse::from).toList();
     }
 }
