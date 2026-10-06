@@ -5,9 +5,9 @@ Day 2 — evening, step 0 (not started). Day 2 morning complete (core build gree
 
 ## Open items
 - **Day 2 evening step 0 (~5 min):** add `UnitResponse` (with `static from(Unit)`) and rename `UnitRequest` → `CreateUnitRequest`; `UnitController` must not return domain `Unit` (lines 26, 31). Prefer `@ResponseStatus(CREATED)` over `new ResponseEntity<>`. In `UnitControllerTest`: rename `shouldContainPCSOnGetAll` (uses KG) and assert `isCreated()` on the setup POST.
-- Homework nits (`homework/day1/`): `Money` — remove debug `println`s, `!=` on strings, null-check `currency`; rename `Vocher` → `Voucher`, `main` → `Main`; add `case Vocher` to the switch.
+- Homework nits (`homework/day1/`): rename `Vocher` → `Voucher` and `main` → `Main`.
 - Day 1 lab nits (still open): `@SpringBootTest()` → `@SpringBootTest` and drop `public` in `PingControllerTest` / `InfoControllerTest`; trailing newline in `application.yml`.
-- Small cleanups: `UnitTest` unused `Unit unit =` in lambdas; `UnitServiceTest` unused `DuplicateFormatFlagsException` import.
+- Small cleanup: `UnitTest` unused `Unit unit =` in lambdas (use `() -> new Unit(...)`).
 - Day 5 candidate: add `maven-enforcer-plugin` to `platform-parent` (require Java 25, Maven 3.9+).
 - Session 2: replace or complement `/api/v1/info` with Actuator `/actuator/info` + build-info.
 - Day 4: delete `InMemoryUnitRepository` when the JPA repository arrives (two `@Repository` beans → `NoUniqueBeanDefinitionException`).
