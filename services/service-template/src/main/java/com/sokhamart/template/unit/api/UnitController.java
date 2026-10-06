@@ -1,5 +1,6 @@
 package com.sokhamart.template.unit.api;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sokhamart.template.unit.application.UnitService;
@@ -23,12 +25,20 @@ public class UnitController {
     }
 
     @PostMapping
-    ResponseEntity<Unit> create(@RequestBody UnitRequest unit) {
-        return new ResponseEntity<>(service.create(unit.code(), unit.name()), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    UnitResponse create(@RequestBody CreateUnitRequest unit) {
+        Unit newUnit = service.create(unit.code(), unit.name());
+        return UnitResponse.from(newUnit);
     }
 
     @GetMapping
-    ResponseEntity<List<Unit>> getAll() {
-        return new ResponseEntity<>(service.findAll(), HttpStatus.OK);
+    List<UnitResponse> getAll() {
+        List<Unit> units = service.findAll();
+        List<UnitResponse> unitRes = new ArrayList<>();
+
+        for (Unit unit : units) {
+            unitRes.add(UnitResponse.from(unit));
+        }
+        return unitRes;
     }
 }

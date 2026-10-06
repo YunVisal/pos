@@ -32,10 +32,11 @@ class UnitControllerTest {
     }
 
     @Test
-    void shouldContainPCSOnGetAll() throws Exception {
+    void shouldContainKGOnGetAll() throws Exception {
         mockMvc.perform(post("/api/v1/units")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"code\":\"KG\",\"name\":\"Kilogram\"}"));
+                .content("{\"code\":\"KG\",\"name\":\"Kilogram\"}"))
+                .andExpect(status().isCreated());
 
         String jsonResponse = mockMvc.perform(get("/api/v1/units"))
                 .andExpect(status().isOk())
