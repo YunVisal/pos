@@ -10,6 +10,7 @@
 
     <modules>
         <module>platform/platform-parent</module>
+        <module>platform/platform-web</module>
         <module>services/service-template</module>
     </modules>
     
