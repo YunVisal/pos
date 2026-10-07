@@ -20,7 +20,7 @@ public record Unit(String code, String name) {
             throw new IllegalArgumentException("Code should be in uppercase characters.");
         }
 
-        if (!code.matches("^[a-zA-Z0-9]+$")) {
+        if (!code.matches("^[A-Z0-9]+$")) {
             throw new IllegalArgumentException("Code should contains only letters and number.");
         }
 

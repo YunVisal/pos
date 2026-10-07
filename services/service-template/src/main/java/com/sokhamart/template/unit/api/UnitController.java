@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sokhamart.template.unit.application.UnitService;
 import com.sokhamart.template.unit.domain.Unit;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/units")
 public class UnitController {
@@ -24,7 +26,7 @@ public class UnitController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    UnitResponse create(@RequestBody CreateUnitRequest unit) {
+    UnitResponse create(@RequestBody @Valid CreateUnitRequest unit) {
         Unit newUnit = service.create(unit.code(), unit.name());
         return UnitResponse.from(newUnit);
     }

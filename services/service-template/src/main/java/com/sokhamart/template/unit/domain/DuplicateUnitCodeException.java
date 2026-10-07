@@ -1,10 +1,8 @@
 package com.sokhamart.template.unit.domain;
 
-public class DuplicateUnitCodeException extends RuntimeException {
-    public DuplicateUnitCodeException() {
-        super();
-    }
+import com.sokhamart.platform.web.error.ConflictException;
 
+public class DuplicateUnitCodeException extends ConflictException {
     public DuplicateUnitCodeException(String message) {
         super(message);
     }
