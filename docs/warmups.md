@@ -111,3 +111,47 @@ Fix: reviews catch it only if someone notices, so an ArchUnit test makes the **b
 4. **feature → feature:** `currency.api` importing `unit.api.CreateUnitRequest` (the stray import from tonight's review).
 
 Fix: replace the single rule with ArchUnit's `layeredArchitecture()` (each layer declares who may access it) plus a feature-isolation rule. Day 5 candidate.
+
+## Day 3 — morning (design)
+
+### Q12. How would you make all 14 services return errors the same way? Where does the code live?
+
+**My answer:** In `service-template`, producing a specific error message for the client.
+
+**Corrected answer:** Specific messages, yes. But the template is **copied** for each new service, and copies drift. Shared code goes in a shared library, `platform-web`, that every service depends on: fix once, fixed everywhere.
+
+### Q13. Status for (a) a blank code, (b) a duplicate code?
+
+**My answer:** 400 for both: bad user input.
+
+**Corrected answer:** (a) 400: the request is invalid on its own. (b) **409 Conflict**: the request is valid, it only clashes with the server's current state (KG exists). The client reacts differently: 400 highlights a field, 409 says "already exists, open it?".
+
+### Q14. How does `platform-web`'s handler turn feature exceptions into 409 without importing them?
+
+**My answer:** Feature exceptions extend `GlobalExceptionHandler`, which extends `RuntimeException`.
+
+**Corrected answer:** Inheritance is right, but on the wrong class: the handler is a Spring bean (`@RestControllerAdvice`) that *catches* exceptions. Put a base type `BusinessException extends RuntimeException` in `platform-web`; feature exceptions extend it; the handler catches the base type.
+
+### Q15. How does the handler know which status to return?
+
+**My answer:** Subclasses: `BadInputException`, `ConflictedException` under `BusinessException`.
+
+**Corrected answer:** Good. Drop `BadInputException`: 400s come from validation/Jackson before business code runs. Categories: `NotFoundException` 404, `ConflictException` 409, `BusinessRuleException` 422. The exception carries no `HttpStatus`; the handler maps type → status.
+
+### Q16. Validate a blank code in the DTO, the domain, or both?
+
+**My answer:** Both: the DTO is only for the api layer, the domain can be used anywhere.
+
+**Corrected answer:** Correct. DTO = friendly feedback, every bad field at once. Domain = invariant, the last line of defence for CSV import, events, etc.
+
+### Q17. What fields go in a common error body?
+
+**My answer:** Error code, request ID, error message.
+
+**Corrected answer:** That maps to RFC 9457 Problem Details: `type` (machine-readable error kind = your error code), `title`, `status`, `detail` (your message), `instance` (the path). Extensions: `errors` for field errors, `requestId` (Day 5).
+
+### Q18. (Day 3 morning close) `CreateUnitRequest.code` has `@Size(max=10)` + `@Pattern("^[A-Z0-9]+$")`, no `@NotBlank`. What does `{"name":"Kilogram"}` (no `code`) return?
+
+**My answer:** The domain throws `IllegalArgumentException`.
+
+**Corrected answer:** Right, and the client gets a **500** "An unexpected error occurred." from the catch-all. Why it gets past the DTO: in Bean Validation, **`null` is valid for every constraint except `@NotNull` / `@NotBlank` / `@NotEmpty`**. `@Size` and `@Pattern` skip null on purpose, so constraints compose. Fix: keep `@NotBlank` for "must be present" and use `*` in the regex so `@Pattern` only judges characters, not emptiness. Then each problem gets one message, and a missing field is a 400.
